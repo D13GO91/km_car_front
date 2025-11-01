@@ -36,14 +36,14 @@ const AuthPage: React.FC = () => {
             <Car className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">KMCAR</h1>
-          <p className="text-gray-600 mt-2">Monitore a saúde do seu veículo</p>
+          <p className="text-gray-600 mt-2">KMCars</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Acesse sua conta</CardTitle>
             <CardDescription>
-              Entre ou crie uma conta para começar a monitorar seu carro
+              Entre ou crie uma conta para começar a usar o KMCars
             </CardDescription>
           </CardHeader>
           <CardContent>

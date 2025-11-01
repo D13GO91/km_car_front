@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Car, Plus, Edit, Trash2, Fuel, Settings } from 'lucide-react';
+import { useFipeMarcas, useFipeModelos, useFipeAnos } from '@/hooks/use-fipe';
+import { useAuth } from '@/contexts/AuthContext'; // 1. IMPORTADO O HOOK DE AUTENTICAÇÃO
 
 interface Car {
   id: string;
@@ -32,6 +34,7 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth(); // 2. OBTIDO O USUÁRIO LOGADO
 
   const [formData, setFormData] = useState({
     brand: '',
@@ -42,6 +45,14 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
     engine_type: '',
     mileage: 0
   });
+
+  const [selectedMarcaCodigo, setSelectedMarcaCodigo] = useState<string | null>(null);
+  const [selectedModeloCodigo, setSelectedModeloCodigo] = useState<string | null>(null);
+
+  const { data: fipeMarcas, isLoading: loadingMarcas } = useFipeMarcas();
+  const { data: modelosData, isLoading: loadingModelos } = useFipeModelos(selectedMarcaCodigo);
+  const { data: fipeAnos, isLoading: loadingAnos } = useFipeAnos(selectedMarcaCodigo, selectedModeloCodigo);
+
 
   useEffect(() => {
     fetchCars();
@@ -57,7 +68,6 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
       if (error) throw error;
       setCars(data || []);
       
-      // Se não há carro selecionado e há carros disponíveis, seleciona o primeiro
       if (!selectedCar && data && data.length > 0) {
         onCarSelect(data[0]);
       }
@@ -72,9 +82,51 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
     }
   };
 
+  const handleMarcaChange = (codigoMarca: string) => {
+    const marcaSelecionada = fipeMarcas?.find((m: any) => m.codigo === codigoMarca);
+    if (!marcaSelecionada) return;
+
+    setSelectedMarcaCodigo(codigoMarca);
+    setSelectedModeloCodigo(null);
+    setFormData(prev => ({ 
+      ...prev, 
+      brand: marcaSelecionada.nome, 
+      model: '', 
+      year: new Date().getFullYear() 
+    }));
+  };
+
+  const handleModeloChange = (codigoModelo: string) => {
+    const modeloSelecionado = modelosData?.modelos.find((m: any) => m.codigo.toString() === codigoModelo);
+    if (!modeloSelecionado) return;
+
+    setSelectedModeloCodigo(codigoModelo);
+    setFormData(prev => ({ 
+      ...prev, 
+      model: modeloSelecionado.nome, 
+      year: new Date().getFullYear() 
+    }));
+  };
+
+  const handleAnoChange = (codigoAno: string) => {
+    const anoSelecionado = fipeAnos?.find((a: any) => a.codigo === codigoAno);
+    if (anoSelecionado) {
+      setFormData(prev => ({ 
+        ...prev, 
+        year: parseInt(anoSelecionado.nome.substring(0, 4)) 
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (!user) {
+      toast({ title: "Erro de autenticação", description: "Usuário não encontrado. Faça login novamente.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
 
     try {
       if (editingCar) {
@@ -86,9 +138,15 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
         if (error) throw error;
         toast({ title: "Carro atualizado com sucesso!" });
       } else {
+        // 3. CORREÇÃO: ADICIONADO 'user_id' AO OBJETO DE INSERÇÃO
+        const dataToInsert = {
+          ...formData,
+          user_id: user.id
+        };
+        
         const { error } = await supabase
           .from('cars_2025_11_01_19_24')
-          .insert([formData]);
+          .insert([dataToInsert]); // Usando o novo objeto 'dataToInsert'
 
         if (error) throw error;
         toast({ title: "Carro cadastrado com sucesso!" });
@@ -137,7 +195,6 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
       toast({ title: "Carro excluído com sucesso!" });
       fetchCars();
       
-      // Se o carro excluído era o selecionado, limpa a seleção
       if (selectedCar?.id === carId) {
         onCarSelect(cars.find(c => c.id !== carId) || null);
       }
@@ -160,6 +217,8 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
       engine_type: '',
       mileage: 0
     });
+    setSelectedMarcaCodigo(null);
+    setSelectedModeloCodigo(null);
   };
 
   const openAddDialog = () => {
@@ -189,45 +248,77 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
                 {editingCar ? 'Editar Carro' : 'Adicionar Novo Carro'}
               </DialogTitle>
               <DialogDescription>
-                Preencha as informações do seu veículo
+                {editingCar ? "Edite as informações do seu veículo" : "Selecione a marca, modelo e ano do seu veículo"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="brand">Marca</Label>
-                  <Input
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    placeholder="Toyota, Honda, etc."
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="model">Modelo</Label>
-                  <Input
-                    id="model"
-                    value={formData.model}
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    placeholder="Corolla, Civic, etc."
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="brand">Marca</Label>
+                <Select
+                  value={selectedMarcaCodigo || ""}
+                  onValueChange={handleMarcaChange}
+                  disabled={loadingMarcas || !!editingCar}
+                >
+                  <SelectTrigger id="brand">
+                    <SelectValue placeholder={loadingMarcas ? "Carregando marcas..." : (editingCar ? formData.brand : "Selecione a marca")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fipeMarcas?.map((marca: any) => (
+                      <SelectItem key={marca.codigo} value={marca.codigo}>
+                        {marca.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="model">Modelo</Label>
+                <Select
+                  value={selectedModeloCodigo || ""}
+                  onValueChange={handleModeloChange}
+                  disabled={loadingModelos || !selectedMarcaCodigo || !!editingCar}
+                >
+                  <SelectTrigger id="model">
+                    <SelectValue placeholder={loadingModelos ? "Carregando modelos..." : (editingCar ? formData.model : "Selecione o modelo")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modelosData?.modelos.map((modelo: any) => (
+                      <SelectItem key={modelo.codigo} value={modelo.codigo.toString()}>
+                        {modelo.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="year">Ano</Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                    min="1900"
-                    max={new Date().getFullYear() + 1}
-                    required
-                  />
+                  {editingCar ? (
+                    <Input
+                      id="year-display"
+                      type="number"
+                      value={formData.year}
+                      disabled
+                    />
+                  ) : (
+                    <Select
+                      onValueChange={handleAnoChange}
+                      disabled={loadingAnos || !selectedModeloCodigo || !!editingCar}
+                    >
+                      <SelectTrigger id="year">
+                        <SelectValue placeholder={loadingAnos ? "Carregando anos..." : "Selecione o ano"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fipeAnos?.map((ano: any) => (
+                          <SelectItem key={ano.codigo} value={ano.codigo}>
+                            {ano.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mileage">Quilometragem</Label>
@@ -235,9 +326,10 @@ const CarManager: React.FC<CarManagerProps> = ({ onCarSelect, selectedCar }) => 
                     id="mileage"
                     type="number"
                     value={formData.mileage}
-                    onChange={(e) => setFormData({ ...formData, mileage: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, mileage: parseInt(e.target.value) || 0 })}
                     min="0"
                     placeholder="0"
+                    required
                   />
                 </div>
               </div>
