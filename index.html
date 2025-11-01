@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Health Monitor - Monitore a Saúde do seu Veículo</title>
+    <meta name="description" content="Aplicativo completo para monitorar a saúde do seu carro com controle de manutenções, troca de óleo e consumo de combustível" />
+    <meta name="author" content="Car Health Monitor" />
+    <meta name="keywords" content="carro, manutenção, combustível, óleo, veículo, monitoramento" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="CarHealth" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Car Health Monitor - Monitore a Saúde do seu Veículo" />
+    <meta property="og:description" content="Aplicativo completo para monitorar a saúde do seu carro com controle de manutenções, troca de óleo e consumo de combustível" />
+    <meta property="og:type" content="website" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
