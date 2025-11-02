@@ -153,22 +153,33 @@ const Dashboard: React.FC<DashboardProps> = ({ cars, selectedCar }) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-gray-600">Visão geral da saúde dos seus veículos</p>
-      </div>
+
+      {/* Carro Selecionado */}
+      {selectedCar && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Car className="w-5 h-5" />
+              {selectedCar.brand} {selectedCar.model} {selectedCar.year}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600">
+                  Quilometragem atual: {selectedCar.mileage.toLocaleString()} km
+                </p>
+              </div>
+              <div className="text-right">
+                <Badge variant="outline">Ativo</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Estatísticas Gerais */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Carros</CardTitle>
-            <Car className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCars}</div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -192,19 +203,6 @@ const Dashboard: React.FC<DashboardProps> = ({ cars, selectedCar }) => {
             <div className="text-2xl font-bold text-yellow-600">{upcomingMaintenance.length}</div>
             <p className="text-xs text-muted-foreground">
               Próximos 30 dias
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Carros em Dia</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.carsUpToDate}</div>
-            <p className="text-xs text-muted-foreground">
-              Sem pendências
             </p>
           </CardContent>
         </Card>
@@ -285,33 +283,6 @@ const Dashboard: React.FC<DashboardProps> = ({ cars, selectedCar }) => {
                   </div>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Carro Selecionado */}
-      {selectedCar && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Car className="w-5 h-5" />
-              Carro Selecionado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {selectedCar.brand} {selectedCar.model} {selectedCar.year}
-                </h3>
-                <p className="text-gray-600">
-                  Quilometragem atual: {selectedCar.mileage.toLocaleString()} km
-                </p>
-              </div>
-              <div className="text-right">
-                <Badge variant="outline">Ativo</Badge>
-              </div>
             </div>
           </CardContent>
         </Card>

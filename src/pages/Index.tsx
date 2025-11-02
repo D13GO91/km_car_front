@@ -43,7 +43,7 @@ const Index = () => {
 
       if (error) throw error;
       setCars(data || []);
-      
+
       // Se não há carro selecionado e há carros disponíveis, seleciona o primeiro
       if (!selectedCar && data && data.length > 0) {
         setSelectedCar(data[0]);
@@ -78,19 +78,18 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center min-h-16 py-3 md:py-0">
             <div className="flex items-center">
               <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg mr-3">
                 <Car className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Car Health Monitor</h1>
-                <p className="text-sm text-gray-600">Monitore a saúde do seu veículo</p>
+                <h1 className="text-xl font-bold text-gray-900">KMCar</h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center space-x-4 mt-2 md:mt-0">
+              <div className="hidden sm:flex items-center text-sm text-gray-600">
                 <User className="w-4 h-4 mr-1" />
                 {user.email}
               </div>
@@ -104,34 +103,38 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 justify-center sm:justify-start">
               <LayoutDashboard className="w-4 h-4" />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="cars" className="flex items-center gap-2">
+            <TabsTrigger value="cars" className="flex items-center gap-2 justify-center sm:justify-start">
               <Car className="w-4 h-4" />
-              Carros
+              <span className="hidden sm:inline">Carros</span>
             </TabsTrigger>
-            <TabsTrigger value="maintenance" className="flex items-center gap-2">
+            <TabsTrigger value="maintenance" className="flex items-center gap-2 justify-center sm:justify-start">
               <Wrench className="w-4 h-4" />
-              Manutenções
+              <span className="hidden sm:inline">Manutenções</span>
             </TabsTrigger>
-            <TabsTrigger value="fuel" className="flex items-center gap-2">
+            <TabsTrigger value="fuel" className="flex items-center gap-2 justify-center sm:justify-start">
               <Fuel className="w-4 h-4" />
-              Combustível
+              <span className="hidden sm:inline">Combustível</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
-            <Dashboard cars={cars} selectedCar={selectedCar} />
+            <Dashboard
+              cars={cars}
+              selectedCar={selectedCar}
+              //setActiveTab={setActiveTab}
+            />
           </TabsContent>
 
           <TabsContent value="cars">
-            <CarManager 
-              onCarSelect={handleCarSelect} 
+            <CarManager
+              onCarSelect={handleCarSelect}
               selectedCar={selectedCar}
             />
           </TabsContent>
